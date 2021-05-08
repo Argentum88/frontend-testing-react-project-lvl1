@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
-import sum from '../src/sum.js';
+import { load } from '../src/loader.js';
+import { cwd } from 'process';
 
-console.log(sum(2, 3));
+console.log(await load('https://page-loader.hexlet.repl.co', cwd()));
