@@ -7,7 +7,7 @@ import axios from 'axios';
 import http from 'axios/lib/adapters/http';
 import nock from 'nock';
 
-import { load } from '../src/loader.js';
+import load from '../src/loader.js';
 
 axios.defaults.adapter = http;
 const __dirname = dirname(fileURLToPath(import.meta.url));
