@@ -22,62 +22,65 @@ const saveToFile = async (filePath, content) => {
   }
 };
 
-const toResource = (mainUrl, url) => ({
-  originUrl: url,
-  url: new URL(url, new URL(mainUrl).origin),
-  filePath: undefined,
-});
+class Loader {
+  constructor (url, path) {
+    this.url = url;
+    this.path = path
+  }
 
-const resourceIsLocal = (mainUrl, resource) => resource.url.host.endsWith(new URL(mainUrl).host);
+  toResource(url) {
+    return {
+      originUrl: url,
+      url: new URL(url, new URL(this.url).origin),
+      filePath: undefined,
+    };
+  }
 
-const doLoadResource = async (mainUrl, resource, path) => {
-  const { data: content } = (await axios.get(resource.url.href, { responseType: 'arraybuffer' }));
-  const filePath = join(path, `${toFileName(mainUrl)}_files`, toFileName(resource.url.href));
-  await saveToFile(filePath, content);
-  return { ...resource, filePath };
-};
+  resourceIsLocal(resource) {
+    return resource.url.host.endsWith(new URL(this.url).host);
+  }
 
-const loadResource = async (mainUrl, path, content, getRawResource, replaceContent) => {
-  const $ = cheerio.load(content);
-  const resources = getRawResource($)
-    .toArray()
-    .map((url) => toResource(mainUrl, url))
-    .filter((resource) => resourceIsLocal(mainUrl, resource));
+  async doLoadResource(resource) {
+    const { data: content } = await axios.get(resource.url.href, { responseType: 'arraybuffer' });
+    const filePath = join(this.path, `${toFileName(this.url)}_files`, toFileName(resource.url.href));
+    await saveToFile(filePath, content);
+    return { ...resource, filePath };
+  }
 
-  const loadedResources = await Promise.all(resources.map(
-    async (resource) => doLoadResource(mainUrl, resource, path),
-  ));
-  loadedResources.forEach((resource) => replaceContent($, resource));
+  async loadResource(getRawResource, replaceContent) {
+    const resources = getRawResource()
+      .toArray()
+      .map((url) => this.toResource(url))
+      .filter((resource) => this.resourceIsLocal(resource));
 
-  return $.html();
-};
+    const loadedResources = await Promise.all(resources.map(
+      async (resource) => this.doLoadResource(resource),
+    ));
+    loadedResources.forEach((resource) => replaceContent(resource));
+  }
+}
 
 export default async (url, path) => {
   let { data: content } = await axios.get(url);
+  const $ = cheerio.load(content);
+  const loader = new Loader(url, path);
 
-  content = await loadResource(
-    url,
-    path,
-    content,
-    ($) => $('img').map((i, el) => $(el).attr('src')),
-    ($, resource) => $(`img[src="${resource.originUrl}"]`).attr('src', resource.filePath.replace(path, '')),
+  const imgs = loader.loadResource(
+    () => $('img').map((i, el) => $(el).attr('src')),
+    (resource) => $(`img[src="${resource.originUrl}"]`).attr('src', resource.filePath.replace(path, '')),
   );
-  content = await loadResource(
-    url,
-    path,
-    content,
-    ($) => $('script').map((i, el) => $(el).attr('src')),
-    ($, resource) => $(`script[src="${resource.originUrl}"]`).attr('src', resource.filePath.replace(path, '')),
+  const scripts = loader.loadResource(
+    () => $('script').map((i, el) => $(el).attr('src')),
+    (resource) => $(`script[src="${resource.originUrl}"]`).attr('src', resource.filePath.replace(path, '')),
   );
-  content = await loadResource(
-    url,
-    path,
-    content,
-    ($) => $('[rel="stylesheet"]').map((i, el) => $(el).attr('href')),
-    ($, resource) => $(`[rel="stylesheet"][href="${resource.originUrl}"]`).attr('href', resource.filePath.replace(path, '')),
+  const styles = loader.loadResource(
+    () => $('[rel="stylesheet"]').map((i, el) => $(el).attr('href')),
+    (resource) => $(`[rel="stylesheet"][href="${resource.originUrl}"]`).attr('href', resource.filePath.replace(path, '')),
   );
+
+  await Promise.all([imgs, scripts, styles]);
 
   const filePath = `${path}/${toFileName(url)}.html`;
-  await saveToFile(filePath, content);
+  await saveToFile(filePath, $.html());
   return filePath;
 };
