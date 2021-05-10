@@ -23,9 +23,9 @@ const saveToFile = async (filePath, content) => {
 };
 
 class Loader {
-  constructor (url, path) {
+  constructor(url, path) {
     this.url = url;
-    this.path = path
+    this.path = path;
   }
 
   toResource(url) {
@@ -61,7 +61,7 @@ class Loader {
 }
 
 export default async (url, path) => {
-  let { data: content } = await axios.get(url);
+  const { data: content } = await axios.get(url);
   const $ = cheerio.load(content);
   const loader = new Loader(url, path);
 
