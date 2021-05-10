@@ -30,72 +30,53 @@ const toResource = (mainUrl, url) => ({
 
 const resourceIsLocal = (mainUrl, resource) => resource.url.host.endsWith(new URL(mainUrl).host);
 
-const loadResource = async (mainUrl, resource, path) => {
+const doLoadResource = async (mainUrl, resource, path) => {
   const { data: content } = (await axios.get(resource.url.href, { responseType: 'arraybuffer' }));
   const filePath = join(path, `${toFileName(mainUrl)}_files`, toFileName(resource.url.href));
   await saveToFile(filePath, content);
   return { ...resource, filePath };
 };
 
-const loadImgs = async (mainUrl, path, content) => {
+const loadResource = async (mainUrl, path, content, getRawResource, replaceContent) => {
   const $ = cheerio.load(content);
-  const resources = $('img')
-    .map((i, el) => $(el).attr('src'))
+  const resources = getRawResource($)
     .toArray()
     .map((url) => toResource(mainUrl, url))
     .filter((resource) => resourceIsLocal(mainUrl, resource));
 
   const loadedResources = await Promise.all(resources.map(
-    async (resource) => loadResource(mainUrl, resource, path),
+    async (resource) => doLoadResource(mainUrl, resource, path),
   ));
-  loadedResources.forEach((resource) => {
-    $(`img[src="${resource.originUrl}"]`).attr('src', resource.filePath.replace(path, ''));
-  });
-
-  return $.html();
-};
-
-const loadScripts = async (mainUrl, path, content) => {
-  const $ = cheerio.load(content);
-  const resources = $('script')
-    .map((i, el) => $(el).attr('src'))
-    .toArray()
-    .map((url) => toResource(mainUrl, url))
-    .filter((resource) => resourceIsLocal(mainUrl, resource));
-
-  const loadedResources = await Promise.all(resources.map(
-    async (resource) => loadResource(mainUrl, resource, path),
-  ));
-  loadedResources.forEach((resource) => {
-    $(`script[src="${resource.originUrl}"]`).attr('src', resource.filePath.replace(path, ''));
-  });
-
-  return $.html();
-};
-
-const loadStyles = async (mainUrl, path, content) => {
-  const $ = cheerio.load(content);
-  const resources = $('[rel="stylesheet"]')
-    .map((i, el) => $(el).attr('href'))
-    .toArray()
-    .map((url) => toResource(mainUrl, url))
-    .filter((resource) => resourceIsLocal(mainUrl, resource));
-
-  const loadedResources = await Promise.all(resources.map(
-    async (resource) => loadResource(mainUrl, resource, path),
-  ));
-  loadedResources.forEach((resource) => {
-    $(`[rel="stylesheet"][href="${resource.originUrl}"]`).attr('href', resource.filePath.replace(path, ''));
-  });
+  loadedResources.forEach((resource) => replaceContent($, resource));
 
   return $.html();
 };
 
 export default async (url, path) => {
   let { data: content } = await axios.get(url);
-  content = await loadImgs(url, path, content);
-  content = await loadScripts(url, path, content);
-  content = await loadStyles(url, path, content);
+
+  content = await loadResource(
+    url,
+    path,
+    content,
+    ($) => $('img').map((i, el) => $(el).attr('src')),
+    ($, resource) => $(`img[src="${resource.originUrl}"]`).attr('src', resource.filePath.replace(path, '')),
+  );
+  content = await loadResource(
+    url,
+    path,
+    content,
+    ($) => $('script').map((i, el) => $(el).attr('src')),
+    ($, resource) => $(`script[src="${resource.originUrl}"]`).attr('src', resource.filePath.replace(path, '')),
+  );
+  content = await loadResource(
+    url,
+    path,
+    content,
+    ($) => $('[rel="stylesheet"]').map((i, el) => $(el).attr('href')),
+    ($, resource) => $(`[rel="stylesheet"][href="${resource.originUrl}"]`).attr('href', resource.filePath.replace(path, '')),
+  );
+
   const filePath = `${path}/${toFileName(url)}.html`;
   await saveToFile(filePath, content);
   return filePath;
