@@ -22,28 +22,34 @@ const saveToFile = async (filePath, content) => {
   }
 };
 
+const toResource = (mainUrl, url) => ({
+  originUrl: url,
+  url: new URL(url, new URL(mainUrl).origin),
+  filePath: undefined,
+});
+
+const resourceIsLocal = (mainUrl, resource) => resource.url.host.endsWith(new URL(mainUrl).host);
+
+const loadResource = async (mainUrl, resource, path) => {
+  const { data: content } = (await axios.get(resource.url.href, { responseType: 'arraybuffer' }));
+  const filePath = join(path, `${toFileName(mainUrl)}_files`, toFileName(resource.url.href));
+  await saveToFile(filePath, content);
+  return { ...resource, filePath };
+};
+
 const loadImg = async (url, path, content) => {
   const $ = cheerio.load(content);
-  let imgs = $('img')
+  const imgResources = $('img')
     .map((i, el) => $(el).attr('src'))
     .toArray()
-    .map((imgSrc) => ({
-      originUrl: imgSrc,
-      url: new URL(imgSrc, new URL(url).origin),
-      filePath: undefined
-    }))
-    .filter((img) => img.url.host.endsWith(new URL(url).host));
+    .map((imgSrc) => toResource(url, imgSrc))
+    .filter((resource) => resourceIsLocal(url, resource));
 
-  imgs = await Promise.all(imgs.map(async (img) => {
-    const { data: imgContent } = (await axios.get(img.url.href, { responseType: 'arraybuffer' }));
-    const filePath = join(path, `${toFileName(url)}_files`, toFileName(img.url.href));
-    await saveToFile(filePath, imgContent);
-    img.filePath = filePath;
-    return img;
-  }));
-
-  imgs.forEach((img) => {
-    $(`img[src="${img.originUrl}"]`).attr('src', img.filePath.replace(path, ''));
+  const loadedImgResources = await Promise.all(imgResources.map(
+    async (imgResource) => loadResource(url, imgResource, path),
+  ));
+  loadedImgResources.forEach((imgResource) => {
+    $(`img[src="${imgResource.originUrl}"]`).attr('src', imgResource.filePath.replace(path, ''));
   });
 
   return $.html();
@@ -53,6 +59,6 @@ export default async (url, path) => {
   let { data: content } = await axios.get(url);
   content = await loadImg(url, path, content);
   const filePath = `${path}/${toFileName(url)}.html`;
-  await writeFile(filePath, content);
+  await saveToFile(filePath, content);
   return filePath;
 };
