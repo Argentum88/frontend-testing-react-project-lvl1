@@ -29,12 +29,18 @@ afterEach(() => {
 test('loader', async () => {
   const html = await readFixture('site.html', 'utf-8');
   const img = await readFixture('img.png');
+  const script = await readFixture('script.js', 'utf-8');
+  const css = await readFixture('application.css', 'utf-8');
   nock('https://page-loader.hexlet.repl.co').get('/path').reply(200, html);
-  nock('https://page-loader.hexlet.repl.co').get('/assets/professions/nodejs.png').reply(200, img);
+  nock('https://page-loader.hexlet.repl.co').get('/assets/professions/nodejs.png').times(2).reply(200, img);
+  nock('https://page-loader.hexlet.repl.co').get('/script.js').reply(200, script);
+  nock('https://page-loader.hexlet.repl.co').get('/assets/application.css').reply(200, css);
 
   const loadedHtml = await readFixture('loaded-site.html', 'utf-8');
   const result = await load('https://page-loader.hexlet.repl.co/path', path);
   expect(result).toEqual(join(path, 'page-loader-hexlet-repl-co-path.html'));
   expect(await readFile(result, 'utf-8')).toEqual(loadedHtml);
   expect(existsSync(join(path, 'page-loader-hexlet-repl-co-path_files/page-loader-hexlet-repl-co-assets-professions-nodejs-png'))).toBeTruthy();
+  expect(existsSync(join(path, 'page-loader-hexlet-repl-co-path_files/page-loader-hexlet-repl-co-script-js'))).toBeTruthy();
+  expect(existsSync(join(path, 'page-loader-hexlet-repl-co-path_files/page-loader-hexlet-repl-co-assets-application-css'))).toBeTruthy();
 });
