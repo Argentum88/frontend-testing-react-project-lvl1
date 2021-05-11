@@ -40,7 +40,7 @@ test('loader', async () => {
   const result = await load('https://page-loader.hexlet.repl.co/path', path);
   expect(result).toEqual(join(path, 'page-loader-hexlet-repl-co-path.html'));
   expect(await readFile(result, 'utf-8')).toEqual(loadedHtml);
-  expect(existsSync(join(path, 'page-loader-hexlet-repl-co-path_files/page-loader-hexlet-repl-co-assets-professions-nodejs-png'))).toBeTruthy();
-  expect(existsSync(join(path, 'page-loader-hexlet-repl-co-path_files/page-loader-hexlet-repl-co-script-js'))).toBeTruthy();
-  expect(existsSync(join(path, 'page-loader-hexlet-repl-co-path_files/page-loader-hexlet-repl-co-assets-application-css'))).toBeTruthy();
+  expect(existsSync(join(path, 'page-loader-hexlet-repl-co-path_files/page-loader-hexlet-repl-co-assets-professions-nodejs.png'))).toBeTruthy();
+  expect(existsSync(join(path, 'page-loader-hexlet-repl-co-path_files/page-loader-hexlet-repl-co-script.js'))).toBeTruthy();
+  expect(existsSync(join(path, 'page-loader-hexlet-repl-co-path_files/page-loader-hexlet-repl-co-assets-application.css'))).toBeTruthy();
 });

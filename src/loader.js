@@ -1,12 +1,18 @@
 import axios from 'axios';
 import { writeFile, mkdir } from 'fs/promises';
 import { URL } from 'url';
-import { join, dirname } from 'path';
+import { join, dirname, parse } from 'path';
 import cheerio from 'cheerio';
 
 const toFileName = (uri) => {
   const url = new URL(uri);
-  return [url.host, url.pathname].join('').replace(/\W/g, '-');
+  const { ext } = parse(url.pathname);
+  const fileName = [url.host, url.pathname.replace(ext, '')]
+    .filter((el) => el !== '/')
+    .join('')
+    .replace(/\W/g, '-');
+
+  return [fileName, ext].join('');
 };
 
 const saveToFile = async (filePath, content) => {
@@ -80,7 +86,7 @@ export default async (url, path) => {
 
   await Promise.all([imgs, scripts, styles]);
 
-  const filePath = `${path}/${toFileName(url)}.html`;
+  const filePath = join(path, `${toFileName(url)}.html`);
   await saveToFile(filePath, $.html());
   return filePath;
 };
