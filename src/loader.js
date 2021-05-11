@@ -53,9 +53,8 @@ class Loader {
     return { ...resource, filePath };
   }
 
-  async loadResource(getRawResource, replaceContent) {
-    const resources = getRawResource()
-      .toArray()
+  async loadResource(getResourceUrls, replaceContent) {
+    const resources = getResourceUrls()
       .map((url) => this.toResource(url))
       .filter((resource) => this.resourceIsLocal(resource));
 
@@ -72,15 +71,15 @@ export default async (url, path) => {
   const loader = new Loader(url, path);
 
   const imgs = loader.loadResource(
-    () => $('img').map((i, el) => $(el).attr('src')),
+    () => $('img').map((i, el) => $(el).attr('src')).toArray(),
     (resource) => $(`img[src="${resource.originUrl}"]`).attr('src', resource.filePath.replace(path, '')),
   );
   const scripts = loader.loadResource(
-    () => $('script').map((i, el) => $(el).attr('src')),
+    () => $('script').map((i, el) => $(el).attr('src')).toArray(),
     (resource) => $(`script[src="${resource.originUrl}"]`).attr('src', resource.filePath.replace(path, '')),
   );
   const styles = loader.loadResource(
-    () => $('[rel="stylesheet"]').map((i, el) => $(el).attr('href')),
+    () => $('[rel="stylesheet"]').map((i, el) => $(el).attr('href')).toArray(),
     (resource) => $(`[rel="stylesheet"][href="${resource.originUrl}"]`).attr('href', resource.filePath.replace(path, '')),
   );
 
