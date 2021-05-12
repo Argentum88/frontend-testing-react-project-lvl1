@@ -3,7 +3,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import { URL } from 'url';
 import { join, dirname, parse } from 'path';
 import cheerio from 'cheerio';
-import _ from 'lodash';
+// import _ from 'lodash';
 
 const toFileName = (uri) => {
   const url = new URL(uri);
@@ -31,7 +31,6 @@ const saveToFile = async (filePath, content) => {
 
 class Loader {
   constructor(url, path) {
-    console.log(url);
     this.url = url;
     this.path = path;
   }
@@ -45,9 +44,10 @@ class Loader {
   }
 
   resourceIsLocal(resource) {
-    const urlHost = new URL(this.url).host.split('.');
-    const resourceHost = resource.url.host.split('.');
-    return _.isEqual(resourceHost.slice(-urlHost.length), urlHost);
+    // const urlHost = new URL(this.url).host.split('.');
+    // resourceHost = resource.url.host.split('.');
+    // return _.isEqual(resourceHost.slice(-urlHost.length), urlHost);
+    return new URL(this.url).host === resource.url.host;
   }
 
   async doLoadResource(resource) {
