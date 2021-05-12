@@ -3,6 +3,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import { URL } from 'url';
 import { join, dirname, parse } from 'path';
 import cheerio from 'cheerio';
+import _ from 'lodash';
 
 const toFileName = (uri) => {
   const url = new URL(uri);
@@ -43,7 +44,9 @@ class Loader {
   }
 
   resourceIsLocal(resource) {
-    return resource.url.host.endsWith(new URL(this.url).host);
+    const urlHost = new URL(this.url).host.split('.');
+    const resourceHost = resource.url.host.split('.');
+    return _.isEqual(resourceHost.slice(-urlHost.length), urlHost);
   }
 
   async doLoadResource(resource) {

@@ -31,16 +31,16 @@ test('loader', async () => {
   const img = await readFixture('img.png');
   const script = await readFixture('script.js', 'utf-8');
   const css = await readFixture('application.css', 'utf-8');
-  nock('https://page-loader.hexlet.repl.co').get('/path').reply(200, html);
-  nock('https://page-loader.hexlet.repl.co').get('/assets/professions/nodejs.png').times(2).reply(200, img);
-  nock('https://page-loader.hexlet.repl.co').get('/script.js').reply(200, script);
-  nock('https://page-loader.hexlet.repl.co').get('/assets/application.css').reply(200, css);
+  nock('https://site.com').get('/path').reply(200, html);
+  nock('https://site.com').get('/assets/professions/nodejs.png').times(2).reply(200, img);
+  nock('https://site.com').get('/script.js').reply(200, script);
+  nock('https://site.com').get('/assets/application.css').reply(200, css);
 
   const loadedHtml = await readFixture('loaded-site.html', 'utf-8');
-  const result = await load('https://page-loader.hexlet.repl.co/path', path);
-  expect(result).toEqual(join(path, 'page-loader-hexlet-repl-co-path.html'));
+  const result = await load('https://site.com/path', path);
+  expect(result).toEqual(join(path, 'site-com-path.html'));
   expect(await readFile(result, 'utf-8')).toEqual(loadedHtml);
-  expect(existsSync(join(path, 'page-loader-hexlet-repl-co-path_files/page-loader-hexlet-repl-co-assets-professions-nodejs.png'))).toBeTruthy();
-  expect(existsSync(join(path, 'page-loader-hexlet-repl-co-path_files/page-loader-hexlet-repl-co-script.js'))).toBeTruthy();
-  expect(existsSync(join(path, 'page-loader-hexlet-repl-co-path_files/page-loader-hexlet-repl-co-assets-application.css'))).toBeTruthy();
+  expect(existsSync(join(path, 'site-com-path_files/site-com-assets-professions-nodejs.png'))).toBeTruthy();
+  expect(existsSync(join(path, 'site-com-path_files/site-com-script.js'))).toBeTruthy();
+  expect(existsSync(join(path, 'site-com-path_files/site-com-assets-application.css'))).toBeTruthy();
 });
