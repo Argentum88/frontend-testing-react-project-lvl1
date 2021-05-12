@@ -5,6 +5,7 @@
   "bin": {
     "page-loader": "./bin/page-loader.js"
   },
+  "main": "src/loader.js",
   "type": "module",
   "scripts": {
     "test": "npx jest --bail"
