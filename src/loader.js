@@ -31,6 +31,7 @@ const saveToFile = async (filePath, content) => {
 
 class Loader {
   constructor(url, path) {
+    console.log(url);
     this.url = url;
     this.path = path;
   }
