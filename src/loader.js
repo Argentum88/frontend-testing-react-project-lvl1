@@ -52,8 +52,8 @@ class Loader {
 
   async doLoadResource(resource) {
     const { data: content } = await axios.get(resource.url.href, { responseType: 'arraybuffer' });
-    const filePath = join(this.path, `${toFileName(this.url)}_files`, toFileName(resource.url.href));
-    await saveToFile(filePath, content);
+    const filePath = join(`${toFileName(this.url)}_files`, toFileName(resource.url.href));
+    await saveToFile(join(this.path, filePath), content);
     return { ...resource, filePath };
   }
 
@@ -76,15 +76,15 @@ export default async (url, path) => {
 
   const imgs = loader.loadResource(
     () => $('img').map((i, el) => $(el).attr('src')).toArray(),
-    (resource) => $(`img[src="${resource.originUrl}"]`).attr('src', resource.filePath.replace(path, '')),
+    (resource) => $(`img[src="${resource.originUrl}"]`).attr('src', resource.filePath),
   );
   const scripts = loader.loadResource(
     () => $('script').map((i, el) => $(el).attr('src')).toArray(),
-    (resource) => $(`script[src="${resource.originUrl}"]`).attr('src', resource.filePath.replace(path, '')),
+    (resource) => $(`script[src="${resource.originUrl}"]`).attr('src', resource.filePath),
   );
   const styles = loader.loadResource(
     () => $('[rel="stylesheet"]').map((i, el) => $(el).attr('href')).toArray(),
-    (resource) => $(`[rel="stylesheet"][href="${resource.originUrl}"]`).attr('href', resource.filePath.replace(path, '')),
+    (resource) => $(`[rel="stylesheet"][href="${resource.originUrl}"]`).attr('href', resource.filePath),
   );
 
   await Promise.all([imgs, scripts, styles]);
