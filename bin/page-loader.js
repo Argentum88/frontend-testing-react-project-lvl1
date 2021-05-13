@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { program } from 'commander';
+import pkg from 'commander';
 import load from '../src/loader.js';
 
 const main = async (url, options) => {
@@ -13,10 +13,11 @@ const main = async (url, options) => {
   }
 };
 
+const { program } = pkg;
 program
   .description('Site loader')
   .arguments('<url>')
-  .option('--output <v>', 'output path')
+  .option('-o, --output <v>', 'output path')
   .action(main);
 
 (async () => program.parseAsync(process.argv))();
