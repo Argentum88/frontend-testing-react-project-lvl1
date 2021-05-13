@@ -41,6 +41,8 @@ test('loader', async () => {
   const result = await load('https://site.com/path', path);
   expect(result).toEqual(join(path, 'site-com-path.html'));
   expect(await readFile(result, 'utf-8')).toEqual(loadedHtml);
+  expect(existsSync(join(path, 'site-com-path.html'))).toBeTruthy();
+  expect(existsSync(join(path, 'site-com-path_files/site-com-courses.html'))).toBeTruthy();
   expect(existsSync(join(path, 'site-com-path_files/site-com-assets-professions-nodejs.png'))).toBeTruthy();
   expect(existsSync(join(path, 'site-com-path_files/site-com-script.js'))).toBeTruthy();
   expect(existsSync(join(path, 'site-com-path_files/site-com-assets-application.css'))).toBeTruthy();
