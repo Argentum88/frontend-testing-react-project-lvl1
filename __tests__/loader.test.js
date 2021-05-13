@@ -11,8 +11,8 @@ import load from '../src/loader.js';
 
 axios.defaults.adapter = http;
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const readFixture = async (name, encoding = null) => {
-  const __dirname = dirname(fileURLToPath(import.meta.url));
   return readFile(join(__dirname, '..', '__fixtures__', name), encoding);
 };
 
