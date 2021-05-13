@@ -32,6 +32,7 @@ test('loader', async () => {
   const script = await readFixture('script.js', 'utf-8');
   const css = await readFixture('application.css', 'utf-8');
   nock('https://site.com').get('/path').reply(200, html);
+  nock('https://site.com').get('/courses').reply(200, html);
   nock('https://site.com').get('/assets/professions/nodejs.png').times(2).reply(200, img);
   nock('https://site.com').get('/script.js').reply(200, script);
   nock('https://site.com').get('/assets/application.css').reply(200, css);

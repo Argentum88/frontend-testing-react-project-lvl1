@@ -86,8 +86,12 @@ export default async (url, path) => {
     () => $('[rel="stylesheet"]').map((i, el) => $(el).attr('href')).toArray(),
     (resource) => $(`[rel="stylesheet"][href="${resource.originUrl}"]`).attr('href', resource.filePath),
   );
+  const canonicals = loader.loadResource(
+    () => $('[rel="canonical"]').map((i, el) => $(el).attr('href')).toArray(),
+    (resource) => $(`[rel="canonical"][href="${resource.originUrl}"]`).attr('href', `${resource.filePath}.html`),
+  );
 
-  await Promise.all([imgs, scripts, styles]);
+  await Promise.all([imgs, scripts, styles, canonicals]);
 
   const filePath = join(path, `${toFileName(url)}.html`);
   await saveToFile(filePath, $.html());
