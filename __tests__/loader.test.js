@@ -10,9 +10,7 @@ import load from '../src/loader.js';
 
 axios.defaults.adapter = http;
 
-const readFixture = async (name, encoding = null) => {
-  return readFile(join(__dirname, '..', '__fixtures__', name), encoding);
-};
+const readFixture = async (name, encoding = null) => readFile(join(__dirname, '..', '__fixtures__', name), encoding);
 
 let path;
 beforeEach(async () => {
