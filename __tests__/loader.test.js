@@ -1,8 +1,7 @@
 import { mkdtemp, readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { tmpdir } from 'os';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { join } from 'path';
 import axios from 'axios';
 import http from 'axios/lib/adapters/http';
 import nock from 'nock';
@@ -11,7 +10,6 @@ import load from '../src/loader.js';
 
 axios.defaults.adapter = http;
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
 const readFixture = async (name, encoding = null) => {
   return readFile(join(__dirname, '..', '__fixtures__', name), encoding);
 };
