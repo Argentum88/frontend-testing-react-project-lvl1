@@ -65,7 +65,7 @@ class Loader {
   }
 }
 
-export default async (url, path) => {
+export default async (url, path = '') => {
   const { data: content } = await axios.get(url);
   const $ = cheerio.load(content);
   const loader = new Loader(url, path);
