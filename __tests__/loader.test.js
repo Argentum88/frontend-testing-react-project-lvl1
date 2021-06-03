@@ -10,38 +10,10 @@ import load from '../src/loader.js';
 axios.defaults.adapter = http;
 
 const readFixture = async (name, encoding = null) => readFile(join(__dirname, '..', '__fixtures__', name), encoding);
-
-const resources = ['/courses', '/assets/professions/nodejs.png', '/script.js', '/assets/application.css'];
-let resourcesInfo = [];
 let path;
 beforeEach(async () => {
   nock.disableNetConnect();
   path = await mkdtemp(join(tmpdir(), 'page-loader-'));
-  resourcesInfo = [
-    {
-      resource: '/courses',
-      filePath: 'courses.html',
-      content: await readFixture('site.html', 'utf-8'),
-    },
-    {
-      resource: '/assets/professions/nodejs.png',
-      filePath: 'assets-professions-nodejs.png',
-      content: await readFixture('img.png'),
-    },
-    {
-      resource: '/script.js',
-      filePath: 'script.js',
-      content: await readFixture('script.js', 'utf-8'),
-    },
-    {
-      resource: '/assets/application.css',
-      filePath: 'assets-application.css',
-      content: await readFixture('application.css', 'utf-8'),
-    },
-  ];
-
-  nock('https://site.com').get('/path').reply(200, await readFixture('site.html', 'utf-8'));
-  resourcesInfo.forEach(({ resource, content }) => nock('https://site.com').get(resource).reply(200, content));
 });
 
 afterEach(() => {
@@ -49,15 +21,60 @@ afterEach(() => {
   nock.enableNetConnect();
 });
 
-test('load and transform main html', async () => {
-  const loadedHtml = await readFixture('loaded-site.html', 'utf-8');
-  const result = await load('https://site.com/path', path);
-  expect(result).toEqual(join(path, 'site-com-path.html'));
-  expect(await readFile(result, 'utf-8')).toEqual(loadedHtml);
+describe('positive cases', () => {
+  const resources = ['/courses', '/assets/professions/nodejs.png', '/script.js', '/assets/application.css'];
+  let resourcesInfo = [];
+  beforeEach(async () => {
+    resourcesInfo = [
+      {
+        resource: '/courses',
+        filePath: 'courses.html',
+        content: await readFixture('site.html', 'utf-8'),
+      },
+      {
+        resource: '/assets/professions/nodejs.png',
+        filePath: 'assets-professions-nodejs.png',
+        content: await readFixture('img.png'),
+      },
+      {
+        resource: '/script.js',
+        filePath: 'script.js',
+        content: await readFixture('script.js', 'utf-8'),
+      },
+      {
+        resource: '/assets/application.css',
+        filePath: 'assets-application.css',
+        content: await readFixture('application.css', 'utf-8'),
+      },
+    ];
+
+    nock('https://site.com').get('/path').reply(200, await readFixture('site.html', 'utf-8'));
+    resourcesInfo.forEach(({ resource, content }) => nock('https://site.com').get(resource).reply(200, content));
+  });
+
+  test('load and transform main html', async () => {
+    const loadedHtml = await readFixture('loaded-site.html', 'utf-8');
+    const result = await load('https://site.com/path', path);
+    expect(result).toEqual(join(path, 'site-com-path.html'));
+    expect(await readFile(result, 'utf-8')).toEqual(loadedHtml);
+  });
+
+  test.each(resources)('resource %s', async (resource) => {
+    await load('https://site.com/path', path);
+    const { filePath } = resourcesInfo.find((resourceInfo) => resourceInfo.resource === resource);
+    expect(existsSync(join(path, `site-com-path_files/site-com-${filePath}`))).toBeTruthy();
+  });
 });
 
-test.each(resources)('resource %s', async (resource) => {
-  await load('https://site.com/path', path);
-  const { filePath } = resourcesInfo.find((resourceInfo) => resourceInfo.resource === resource);
-  expect(existsSync(join(path, `site-com-path_files/site-com-${filePath}`))).toBeTruthy();
+describe('negative cases', () => {
+  test.each([404, 500])('server %s error', (code) => {
+    nock('https://site.com').get('/path').reply(code);
+    return expect(load('https://site.com/path')).rejects.toThrow();
+  });
+
+  test('access error', async () => {
+    const html = await readFixture('simple-site.html', 'utf-8');
+    nock('https://site.com').get('/path').reply(200, html);
+    return expect(load('https://site.com/path', '/sys')).rejects.toThrow();
+  });
 });
