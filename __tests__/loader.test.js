@@ -17,6 +17,35 @@ beforeEach(async () => {
   path = await mkdtemp(join(tmpdir(), 'page-loader-'));
 });
 
+let resources = [];
+beforeAll(async () => {
+  console.log('before')
+  resources = [
+    {
+      resourcePath: '/courses',
+      file: 'courses.html',
+      content: await readFixture('site.html', 'utf-8'),
+    },
+    {
+      resourcePath: '/assets/professions/nodejs.png',
+      file: 'assets-professions-nodejs.png',
+      content: await readFixture('img.png'),
+    },
+    {
+      resourcePath: '/script.js',
+      file: 'script.js',
+      content: await readFixture('script.js', 'utf-8'),
+    },
+    {
+      resourcePath: '/assets/application.css',
+      file: 'assets-application.css',
+      content: await readFixture('application.css', 'utf-8'),
+    },
+  ];
+
+  let a = 5;
+});
+
 afterEach(() => {
   nock.cleanAll();
   nock.enableNetConnect();
@@ -42,6 +71,14 @@ test('loader', async () => {
   expect(existsSync(join(path, 'site-com-path_files/site-com-assets-professions-nodejs.png'))).toBeTruthy();
   expect(existsSync(join(path, 'site-com-path_files/site-com-script.js'))).toBeTruthy();
   expect(existsSync(join(path, 'site-com-path_files/site-com-assets-application.css'))).toBeTruthy();
+});
+
+test.each((() => {console.log('each'); return []})()/*resources*/)('%o', async ({ file }) => {
+  resources.forEach(({ resourcePath, content }) => nock('https://site.com').get(resourcePath).reply(200, content));
+  const html = await readFixture('site.html', 'utf-8');
+  nock('https://site.com').get('/path').reply(200, html);
+  await load('https://site.com/path', path);
+  expect(existsSync(join(path, `site-com-path_files/site-com-${file}`))).toBeTruthy();
 });
 
 test('server error', () => {
