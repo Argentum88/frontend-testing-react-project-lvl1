@@ -9,11 +9,10 @@ import load from '../src/loader.js';
 
 axios.defaults.adapter = http;
 
-const readFixture = async (name, encoding = null) => readFile(join(__dirname, '..', '__fixtures__', name), encoding);
-let path;
+const readFixture = async (name) => readFile(join(__dirname, '..', '__fixtures__', name), 'utf-8');
+
 beforeEach(async () => {
   nock.disableNetConnect();
-  path = await mkdtemp(join(tmpdir(), 'page-loader-'));
 });
 
 afterEach(() => {
@@ -22,38 +21,19 @@ afterEach(() => {
 });
 
 describe('positive cases', () => {
-  const resources = ['/courses', '/assets/professions/nodejs.png', '/script.js', '/assets/application.css'];
-  let resourcesInfo = [];
+  const resources = ['img.png', 'script.js', 'application.css'];
+  let path;
   beforeEach(async () => {
-    resourcesInfo = [
-      {
-        resource: '/courses',
-        filePath: 'courses.html',
-        content: await readFixture('site.html', 'utf-8'),
-      },
-      {
-        resource: '/assets/professions/nodejs.png',
-        filePath: 'assets-professions-nodejs.png',
-        content: await readFixture('img.png'),
-      },
-      {
-        resource: '/script.js',
-        filePath: 'script.js',
-        content: await readFixture('script.js', 'utf-8'),
-      },
-      {
-        resource: '/assets/application.css',
-        filePath: 'assets-application.css',
-        content: await readFixture('application.css', 'utf-8'),
-      },
-    ];
+    path = await mkdtemp(join(tmpdir(), 'page-loader-'));
 
-    nock('https://site.com').get('/path').reply(200, await readFixture('site.html', 'utf-8'));
-    resourcesInfo.forEach(({ resource, content }) => nock('https://site.com').get(resource).reply(200, content));
+    nock('https://site.com').get('/path').reply(200, await readFixture('site.html'));
+    for (let resource of resources) {
+      nock('https://site.com').get(`/${resource}`).reply(200, await readFixture(resource));
+    }
   });
 
   test('load and transform main html', async () => {
-    const loadedHtml = await readFixture('loaded-site.html', 'utf-8');
+    const loadedHtml = await readFixture('loaded-site.html');
     const result = await load('https://site.com/path', path);
     expect(result).toEqual(join(path, 'site-com-path.html'));
     expect(await readFile(result, 'utf-8')).toEqual(loadedHtml);
@@ -61,8 +41,7 @@ describe('positive cases', () => {
 
   test.each(resources)('resource %s', async (resource) => {
     await load('https://site.com/path', path);
-    const { filePath } = resourcesInfo.find((resourceInfo) => resourceInfo.resource === resource);
-    expect(existsSync(join(path, `site-com-path_files/site-com-${filePath}`))).toBeTruthy();
+    expect(existsSync(join(path, `site-com-path_files/site-com-${resource}`))).toBeTruthy();
   });
 });
 
@@ -73,7 +52,7 @@ describe('negative cases', () => {
   });
 
   test('access error', async () => {
-    const html = await readFixture('simple-site.html', 'utf-8');
+    const html = await readFixture('simple-site.html');
     nock('https://site.com').get('/path').reply(200, html);
     return expect(load('https://site.com/path', '/sys')).rejects.toThrow();
   });
