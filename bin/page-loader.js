@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import pkg from 'commander';
+import { cwd } from 'process';
 import load from '../src/loader.js';
 
 const main = async (url, options) => {
@@ -17,7 +18,7 @@ const { program } = pkg;
 program
   .description('Site loader')
   .arguments('<url>')
-  .option('-o, --output <v>', 'output path')
+  .option('-o, --output <v>', 'output path', cwd())
   .action(main);
 
 (async () => program.parseAsync(process.argv))();

@@ -3,7 +3,6 @@ import { writeFile, mkdir } from 'fs/promises';
 import { URL } from 'url';
 import { join, dirname, parse } from 'path';
 import cheerio from 'cheerio';
-import { cwd } from 'process';
 
 const toFileName = (uri) => {
   const url = new URL(uri);
@@ -66,7 +65,7 @@ class Loader {
   }
 }
 
-export default async (url, path = cwd()) => {
+export default async (url, path) => {
   const { data: content } = await axios.get(url);
   const $ = cheerio.load(content);
   const loader = new Loader(url, path);

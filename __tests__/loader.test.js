@@ -5,7 +5,6 @@ import { join } from 'path';
 import axios from 'axios';
 import http from 'axios/lib/adapters/http';
 import nock from 'nock';
-import { cwd } from 'process';
 import load from '../src/loader.js';
 
 axios.defaults.adapter = http;
@@ -43,14 +42,6 @@ test('loader', async () => {
   expect(existsSync(join(path, 'site-com-path_files/site-com-assets-professions-nodejs.png'))).toBeTruthy();
   expect(existsSync(join(path, 'site-com-path_files/site-com-script.js'))).toBeTruthy();
   expect(existsSync(join(path, 'site-com-path_files/site-com-assets-application.css'))).toBeTruthy();
-});
-
-test('if path undefined use cwd', async () => {
-  const html = await readFixture('simple-site.html', 'utf-8');
-  nock('https://site.com').get('/path').reply(200, html);
-
-  const result = await load('https://site.com/path');
-  expect(result).toEqual(join(cwd(), 'site-com-path.html'));
 });
 
 test('server error', () => {
