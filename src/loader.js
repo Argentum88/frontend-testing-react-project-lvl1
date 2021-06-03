@@ -4,7 +4,6 @@ import { URL } from 'url';
 import { join, dirname, parse } from 'path';
 import cheerio from 'cheerio';
 import { cwd } from 'process';
-// import _ from 'lodash';
 
 const toFileName = (uri) => {
   const url = new URL(uri);
@@ -45,26 +44,23 @@ class Loader {
   }
 
   resourceIsLocal(resource) {
-    // const urlHost = new URL(this.url).host.split('.');
-    // resourceHost = resource.url.host.split('.');
-    // return _.isEqual(resourceHost.slice(-urlHost.length), urlHost);
     return new URL(this.url).host === resource.url.host;
   }
 
-  async doLoadResource(resource) {
+  async loadResource(resource) {
     const { data: content } = await axios.get(resource.url.href, { responseType: 'arraybuffer' });
     const filePath = join(toFileName(this.url).replace('.html', '_files'), toFileName(resource.url.href));
     await saveToFile(join(this.path, filePath), content);
     return { ...resource, filePath };
   }
 
-  async loadResource(getResourceUrls, replaceContent) {
+  async load(getResourceUrls, replaceContent) {
     const resources = getResourceUrls()
       .map((url) => this.toResource(url))
       .filter((resource) => this.resourceIsLocal(resource));
 
     const loadedResources = await Promise.all(resources.map(
-      async (resource) => this.doLoadResource(resource),
+      async (resource) => this.loadResource(resource),
     ));
     loadedResources.forEach((resource) => replaceContent(resource));
   }
@@ -75,15 +71,15 @@ export default async (url, path = cwd()) => {
   const $ = cheerio.load(content);
   const loader = new Loader(url, path);
 
-  const imgs = loader.loadResource(
+  const imgs = loader.load(
     () => $('img').map((i, el) => $(el).attr('src')).toArray(),
     (resource) => $(`img[src="${resource.originUrl}"]`).attr('src', resource.filePath),
   );
-  const scripts = loader.loadResource(
+  const scripts = loader.load(
     () => $('script').map((i, el) => $(el).attr('src')).toArray(),
     (resource) => $(`script[src="${resource.originUrl}"]`).attr('src', resource.filePath),
   );
-  const links = loader.loadResource(
+  const links = loader.load(
     () => $('link').map((i, el) => $(el).attr('href')).toArray(),
     (resource) => $(`link[href="${resource.originUrl}"]`).attr('href', resource.filePath),
   );

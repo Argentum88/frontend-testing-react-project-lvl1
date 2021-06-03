@@ -52,3 +52,14 @@ test('if path undefined use cwd', async () => {
   const result = await load('https://site.com/path');
   expect(result).toEqual(join(cwd(), 'site-com-path.html'));
 });
+
+test('server error', () => {
+  nock('https://site.com').get('/path').reply(500);
+  return expect(load('https://site.com/path')).rejects.toThrow();
+});
+
+test('access error', async () => {
+  const html = await readFixture('simple-site.html', 'utf-8');
+  nock('https://site.com').get('/path').reply(200, html);
+  return expect(load('https://site.com/path', '/sys')).rejects.toThrow();
+});
