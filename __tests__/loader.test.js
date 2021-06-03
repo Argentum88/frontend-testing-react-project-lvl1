@@ -27,9 +27,10 @@ describe('positive cases', () => {
     path = await mkdtemp(join(tmpdir(), 'page-loader-'));
 
     nock('https://site.com').get('/path').reply(200, await readFixture('site.html'));
-    for (let resource of resources) {
-      nock('https://site.com').get(`/${resource}`).reply(200, await readFixture(resource));
-    }
+    await Promise.all(resources.map(async (resource) => {
+      const content = await readFixture(resource);
+      nock('https://site.com').get(`/${resource}`).reply(200, content);
+    }));
   });
 
   test('load and transform main html', async () => {
