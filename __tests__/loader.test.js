@@ -5,9 +5,9 @@ import { join } from 'path';
 import nock from 'nock';
 import load from '../src/loader.js';
 
-const readFixture = async (name) => readFile(join(__dirname, '..', '__fixtures__', name), 'utf-8');
+const readFixture = async (...paths) => readFile(join(__dirname, '..', '__fixtures__', ...paths), 'utf-8');
 
-beforeEach(async () => {
+beforeEach(() => {
   nock.disableNetConnect();
 });
 

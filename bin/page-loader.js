@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import pkg from 'commander';
+import { program } from 'commander';
 import { cwd } from 'process';
 import load from '../src/loader.js';
 
-const main = async (url, options) => {
+const run = async (url, options) => {
   try {
     const { output } = options;
     console.log(await load(url, output));
@@ -14,11 +14,10 @@ const main = async (url, options) => {
   }
 };
 
-const { program } = pkg;
 program
   .description('Site loader')
+  .version('1.0.0')
   .arguments('<url>')
   .option('-o, --output <v>', 'output path', cwd())
-  .action(main);
-
-(async () => program.parseAsync(process.argv))();
+  .action(run)
+  .parse();

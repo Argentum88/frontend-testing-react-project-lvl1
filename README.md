@@ -9,4 +9,15 @@ loads html and local resources from url and saves them to disk
 `make install`  
 `./bin/page-loader.js https://domain.com/path /path/to/save`
 
+## Демонстрация
+
+### Пример работы
 [![asciicast](https://asciinema.org/a/S4HwXA5zDDJ3Lan4S1PKQbM8X.svg)](https://asciinema.org/a/S4HwXA5zDDJ3Lan4S1PKQbM8X)
+
+### Пример логирования
+
+[![asciicast](https://asciinema.org/a/g694zDGJIKwRBAwyccbBtRNR5.svg)](https://asciinema.org/a/g694zDGJIKwRBAwyccbBtRNR5)
+
+### Пример обработки ошибок
+
+[![asciicast](https://asciinema.org/a/YT80dwDP35CNSch0h3yb7ayMi.svg)](https://asciinema.org/a/YT80dwDP35CNSch0h3yb7ayMi)

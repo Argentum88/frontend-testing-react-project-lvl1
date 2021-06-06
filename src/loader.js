@@ -2,7 +2,10 @@ import axios from 'axios';
 import { writeFile, mkdir } from 'fs/promises';
 import { URL } from 'url';
 import { join, dirname, parse } from 'path';
+import debug from 'debug';
 import cheerio from 'cheerio';
+
+const log = debug('page-loader');
 
 let baseUrl;
 let basePath;
@@ -21,6 +24,7 @@ const toFileName = (uri) => {
 const saveToFile = async (filePath, content) => {
   try {
     await writeFile(filePath, content);
+    log('file %s saved', filePath);
   } catch (e) {
     if (e.code !== 'ENOENT') {
       throw e;
