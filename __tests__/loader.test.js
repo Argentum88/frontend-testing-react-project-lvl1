@@ -30,15 +30,20 @@ describe('positive cases', () => {
   });
 
   test('load and transform main html', async () => {
-    const loadedHtml = await readFixture('loaded-site.html');
+    const loadedHtml = await readFixture('expected', 'site.html');
     const result = await load('https://site.com/path', path);
+
     expect(result).toEqual(join(path, 'site-com-path.html'));
     expect(await readFile(result, 'utf-8')).toEqual(loadedHtml);
   });
 
   test.each(resources)('resource %s', async (resource) => {
     await load('https://site.com/path', path);
-    expect(existsSync(join(path, `site-com-path_files/site-com-${resource}`))).toBeTruthy();
+    const expectedContent = await readFixture('expected', resource);
+    const loadedResourcePath = join(path, `site-com-path_files/site-com-${resource}`);
+
+    expect(existsSync(loadedResourcePath)).toBeTruthy();
+    expect(await readFile(loadedResourcePath, 'utf-8')).toEqual(expectedContent);
   });
 });
 
